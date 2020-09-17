@@ -41,10 +41,6 @@ let persons = [
   }
 ];
 
-const generateId = () => {
-  return Math.floor(Math.random() * maxId);
-}
-
 app.get('/info', (req,res) => {
   res.send(`<div><p>Phonebook has info for ${persons.length} people</p>${new Date()}</div>`)
 });
@@ -55,47 +51,51 @@ app.get('/api/persons', (req, res) => {
   });
 });
 
-app.get('/api/persons/:id', (req, res) => {
-  Person.findById(req.params.id).then(returnedPerson => {
-    res.json(returnedPerson);
-  });
+app.get('/api/persons/:id', (req, res, next) => {
+  Person.findById(req.params.id)
+    .then(returnedPerson => {
+      res.json(returnedPerson);
+    })
+    .catch(error => next(error));
 });
 
-app.delete('/api/persons/:id', (req, res) => {
+app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndRemove(req.params.id)
     .then(result => {
       res.status(204).end();
     })
-    .catch(error => {
-      console.error(error);
-      res.status(500).send({ error: error.message });
-    });
+    .catch(error => next(error));
 });
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
   const body = req.body;
-
-  // if (!(body.name && body.number)) {
-  //   return res.status(400).json({
-  //     error: 'must have name and number'
-  //   });
-  // }
-
-  // if (persons.find(p => p.name === body.name)) {
-  //   return res.status(400).json({
-  //     error: 'name must be unique'
-  //   });
-  // }
 
   const person = new Person({
     name: body.name,
     number: body.number
   });
 
-  person.save().then(savedPerson => {
-    res.json(savedPerson);
-  })
+  person.save()
+    .then(savedPerson => {
+      res.json(savedPerson);
+    })
+    .catch(error => next(error));
 });
+
+const unknownEndpoint = (req, res) => {
+  console.log('Unknown endpoint:', req.path);
+  res.status(404).send({ error: 'unknown endpoint' });
+}
+app.use(unknownEndpoint);
+
+const errorHandler = (error, req, response, next) => {
+  console.error(error);
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' });
+  }
+  next(error);
+}
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
