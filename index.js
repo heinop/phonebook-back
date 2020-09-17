@@ -82,16 +82,30 @@ app.post('/api/persons', (req, res, next) => {
     .catch(error => next(error));
 });
 
+app.put('/api/persons/:id', (req, res, next) => {
+  const body = req.body;
+  const person = {
+    name: body.name,
+    number: body.number
+  };
+
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then(updatedPerson => {
+      res.json(updatedPerson);
+    })
+    .catch(error => next(error));
+});
+
 const unknownEndpoint = (req, res) => {
   console.log('Unknown endpoint:', req.path);
   res.status(404).send({ error: 'unknown endpoint' });
 }
 app.use(unknownEndpoint);
 
-const errorHandler = (error, req, response, next) => {
+const errorHandler = (error, req, res, next) => {
   console.error(error);
   if (error.name === 'CastError') {
-    return response.status(400).send({ error: 'malformatted id' });
+    return res.status(400).send({ error: 'malformatted id' });
   }
   next(error);
 }
