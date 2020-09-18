@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
-const Person = require('./models/person')
+const Person = require('./models/person');
 
 const app = express();
 
@@ -19,7 +19,7 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :r
 app.get('/info', (req, res, next) => {
   Person.count()
     .then(amount => {
-      res.send(`<div><p>Phonebook has info for ${amount} people</p>${new Date()}</div>`)
+      res.send(`<div><p>Phonebook has info for ${amount} people</p>${new Date()}</div>`);
     })
     .catch(error => next(error));
 });
@@ -80,7 +80,7 @@ app.put('/api/persons/:id', (req, res, next) => {
 const unknownEndpoint = (req, res) => {
   console.log('Unknown endpoint:', req.path);
   res.status(404).send({ error: 'unknown endpoint' });
-}
+};
 app.use(unknownEndpoint);
 
 const errorHandler = (error, req, res, next) => {
@@ -88,10 +88,10 @@ const errorHandler = (error, req, res, next) => {
   if (error.name === 'CastError') {
     return res.status(400).send({ error: 'malformatted id' });
   } else if (error.name === 'ValidationError') {
-    return res.status(400).send({ error: error.message});
+    return res.status(400).send({ error: error.message });
   }
   next(error);
-}
+};
 app.use(errorHandler);
 
 const PORT = process.env.PORT;
